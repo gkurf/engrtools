@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imperial Fraction Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="input-section">
+    <h1>Imperial Fraction Calculator</h1>
+    <div class="input-row">
+      <div>
+        <label for="decimalInput">Decimal number:</label>
+        <input type="text" id="decimalInput" placeholder="e.g., 0.375">
+      </div>
+      <div>
+        <label for="maxDenominator">Maximum denominator:</label>
+        <select id="maxDenominator">
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+    </div>
+    <div id="errorPanel" class="error-panel"></div>
+  </div>
+
+  <div id="ruler-container" class="ruler-container">
+    <div id="ruler" class="ruler"></div>
+  </div>
+
+  <div id="results" class="fraction-grid"></div>
+
+  <script src="Constants.js"></script>
+  <script src="Frac.js"></script>
+  <script src="Ruler.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

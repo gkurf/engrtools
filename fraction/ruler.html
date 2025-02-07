@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Ruler</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 5px auto;
+            padding: 5px;
+            background: #f9f9f9;
+            font-size: 14px;
+        }
+
+        .ruler-container {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .ruler {
+            height: 100px;
+            position: relative;
+            background-color: transparent;
+            border-radius: 4px;
+        }
+
+        .tick-mark {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            transform: translateX(-50%);
+            transition: background-color 0.3s ease;
+        }
+
+        .tick-label {
+            position: absolute;
+            font-size: 12px;
+            text-align: left;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="ruler-container" class="ruler-container">
+        <div id="ruler" class="ruler"></div>
+    </div>
+
+    <script src="Constants.js"></script>
+    <script>
+        function createTickMark(x, height, label = '', tickColor = 'black', labelColor = 'black', direction = "horiz", thickness=2) {
+            const ruler = document.getElementById('ruler');
+
+            // Create tick mark
+            const tickMark = document.createElement('div');
+            tickMark.classList.add('tick-mark');
+            tickMark.style.left = `${x * 100}%`;
+            tickMark.style.height = `${height * 100}%`;
+            tickMark.style.backgroundColor = tickColor;
+            tickMark.style.width = `${thickness}px`;
+
+            // Create label if provided
+            if (label) {
+                const labelElement = document.createElement('div');
+                labelElement.classList.add('tick-label');
+                labelElement.textContent = label;
+                labelElement.style.left = `${x * 100}%`;
+                labelElement.style.bottom = `${height * 100 + 7}%`;
+                labelElement.style.color = labelColor;
+                ruler.appendChild(labelElement);
+
+                if (direction == "horiz") {
+                    labelElement.style.transform = `translateX(-50%)`;
+                } else {
+                    labelElement.style.transform = ` translateX(-52%) rotate(-90deg)`;
+                }
+
+                if (thickness > 2) {
+                    labelElement.style.fontWeight = 'bold';
+                } else {
+                    labelElement.style.fontWeight = 'normal';
+                }
+            }
+
+            ruler.appendChild(tickMark);
+        }
+
+        function createRuler(min, max, tickDepth, labelDepth, highlighted = NaN) {
+            const HIDE_PCT = 0.01;
+            const span = max - min;
+            const normalizedHighlight = (highlighted - min) / span;
+            let label = ``;
+
+            for (let whole = min; whole <= max; whole++) {
+                const normalizedWhole = (whole - min) / span;
+
+                if (Math.abs(normalizedWhole - normalizedHighlight) > HIDE_PCT) {
+                    label = `${whole}`;
+                } else {
+                    label = ``;
+                }
+                createTickMark(normalizedWhole, 1, label);
+
+                if (whole === max) break;
+
+                for (let denom = 2; denom <= tickDepth; denom *= 2) {
+                    const tickHeight = 1.5 / (Math.log2(denom) + 1);
+
+                    for (let num = 1; num < denom; num += 2) {
+                        const position = normalizedWhole + num / denom / span;
+                        if ((labelDepth >= denom) && (Math.abs(position - normalizedHighlight) > HIDE_PCT)) {
+                            label = `${num}/${denom}`
+                        } else {
+                            label = '';
+                        }
+
+                        createTickMark(position, tickHeight, label, 'black', DENOMINATOR_COLORS[denom], 'vert');
+                    }
+                }
+            }
+
+            if (!isNaN(highlighted)) {
+                createTickMark(normalizedHighlight, 1, highlighted.toString(), '#4CAF50', '#4CAF50', 'vert', 3);
+            }
+        }
+
+        createRuler(1, 2, 128, 16, 1.9);
+    </script>
+</body>
+</html>
