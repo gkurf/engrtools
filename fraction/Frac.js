@@ -54,7 +54,7 @@ class Frac {
         }
 
         const numerator = n / this.denominator * this.numerator;
-        
+
         if (!Number.isInteger(numerator)) {
             throw new Error('Fraction cannot be converted to this base.');
         }
@@ -87,14 +87,14 @@ class Frac {
         if (this.numerator === 0) {
             return `<div class="whole-number">${this.whole}</div>`;
         }
-    
+
         if (this.whole === 0) {
             return `<div class="fraction">
                 <div class="fraction-top">${this.numerator}</div>
                 <div class="fraction-bottom">${this.denominator}</div>
             </div>`;
         }
-    
+
         return `<div class="whole-number">${this.whole}</div> <div class="fraction">
             <div class="fraction-top">${this.numerator}</div>
             <div class="fraction-bottom">${this.denominator}</div>

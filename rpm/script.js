@@ -8,10 +8,31 @@ const defaultShape = rotatingElement.querySelector('.default-shape');
 const errorPanel = document.getElementById('errorPanel');
 const visualizationContainer = document.getElementById('visualizationContainer');
 
+// Create and add the speed display
+const speedDisplay = document.createElement('div');
+speedDisplay.className = 'speed-display';
+document.body.insertBefore(speedDisplay, visualizationContainer.nextSibling);
+
 // State management
 let currentAngle = 0;
 let animationFrameId = null;
 let lastTimestamp = 0;
+
+// Conversion factors (to RPS)
+const conversionFactors = {
+    'rpm': 1 / 60,
+    'rps': 1,
+    'rad/s': 1 / (2 * Math.PI),
+    'deg/s': 1 / 360
+};
+
+// Inverse conversion factors (from RPS)
+const inverseConversionFactors = {
+    'rpm': 60,
+    'rps': 1,
+    'rad/s': 2 * Math.PI,
+    'deg/s': 360
+};
 
 function showError(message) {
     errorPanel.textContent = message;
@@ -24,38 +45,45 @@ function hideError() {
     visualizationContainer.style.display = 'flex';
 }
 
-// Convert any unit to rotations per second
+// Convert between units
+function convertSpeed(value, fromUnit, toUnit) {
+    // First convert to RPS
+    const rps = value * conversionFactors[fromUnit];
+    // Then convert to target unit
+    return rps * inverseConversionFactors[toUnit];
+}
+
+// Get rotations per second
 function getRotationsPerSecond(value, unit) {
-    switch (unit) {
-        case 'rpm':
-            return value / 60;
-        case 'rps':
-            return value;
-        case 'rad/s':
-            return value / (2 * 3.14159);
-        case 'deg/s':
-            return value / 360;
-        default:
-            console.warn('Unknown unit:', unit);
-            return value / 60; // Default to RPM conversion
+    return value * conversionFactors[unit];
+}
+
+// Handle unit change
+function handleUnitChange() {
+    const currentValue = parseFloat(rpmInput.value);
+    const oldUnit = unitSelect.dataset.previousUnit || 'rpm';
+    const newUnit = unitSelect.value;
+
+    const formatDecimal = (num) => num.toFixed(6).replace(/\.?0+$/, '');
+
+    if (!isNaN(currentValue)) {
+        const convertedValue = convertSpeed(currentValue, oldUnit, newUnit);
+        rpmInput.value = formatDecimal(convertedValue);
     }
+
+    unitSelect.dataset.previousUnit = newUnit;
+    startRotation();
 }
 
 // Reset to default shape
 function resetToDefaultShape() {
-    // Clear the file input
     imageUpload.value = '';
-
-    // Remove existing content
     rotatingElement.innerHTML = '';
-
-    // Recreate default shape
     const newDefaultShape = document.createElement('div');
     newDefaultShape.className = 'default-shape';
     rotatingElement.appendChild(newDefaultShape);
 }
 
-// Handle image upload and display
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file || !file.type.startsWith('image/')) {
@@ -67,28 +95,19 @@ function handleImageUpload(event) {
     reader.onload = function (e) {
         const img = new Image();
         img.onload = function () {
-            // Remove existing content
             rotatingElement.innerHTML = '';
+            const maxSize = 300;
+            const scale = Math.min(maxSize / img.width, maxSize / img.height);
 
-            // Calculate scaling to fit within container while maintaining aspect ratio
-            const maxSize = 300; // matches container size from CSS
-            const scale = Math.min(
-                maxSize / img.width,
-                maxSize / img.height
-            );
-
-            // Create and style image container
             const imgContainer = document.createElement('div');
             imgContainer.style.width = `${img.width * scale}px`;
             imgContainer.style.height = `${img.height * scale}px`;
             imgContainer.style.overflow = 'hidden';
 
-            // Style the image
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'contain';
 
-            // Add to DOM
             imgContainer.appendChild(img);
             rotatingElement.appendChild(imgContainer);
         };
@@ -97,67 +116,46 @@ function handleImageUpload(event) {
     reader.readAsDataURL(file);
 }
 
-// Main rotation update function
 function updateRotation(timestamp) {
-    // Initialize timestamp on first run
     if (!lastTimestamp) {
         lastTimestamp = timestamp;
     }
 
-    // Calculate time elapsed since last frame
-    const deltaTime = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+    const deltaTime = (timestamp - lastTimestamp) / 1000;
     lastTimestamp = timestamp;
 
-    const rpm = parseFloat(rpmInput.value);
+    const speed = parseFloat(rpmInput.value);
 
-    if (isNaN(rpm)) {
+    if (isNaN(speed)) {
         showError('Please enter a valid number');
         return;
     }
 
-    // Hide error and show visualization if input is valid
     hideError();
 
     const unit = unitSelect.value;
+    const rps = getRotationsPerSecond(Math.abs(speed), unit);
+    const direction = Math.sign(speed) || 1;
 
-    // Get current speed in rotations per second
-    const speed = getRotationsPerSecond(Math.abs(rpm), unit);
+    currentAngle += direction * rps * 360 * deltaTime;
+    currentAngle %= 360;
 
-    // Update angle based on speed and time elapsed
-    // Use rpm sign to determine direction
-    const direction = Math.sign(rpm) || 1; // Default to 1 if rpm is 0
-    currentAngle += direction * speed * 360 * deltaTime;
-    currentAngle %= 360; // Keep angle between 0-360 degrees
-
-    // Apply rotation
     rotatingElement.style.transform = `rotate(${currentAngle}deg)`;
-
-    // Continue animation
     animationFrameId = requestAnimationFrame(updateRotation);
 }
 
-// Start/restart rotation animation
 function startRotation() {
-    // Clean up existing animation if any
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
     }
-
-    // Reset timestamp for accurate timing
     lastTimestamp = 0;
-
-    // Start new animation
     animationFrameId = requestAnimationFrame(updateRotation);
 }
 
 // Event Listeners
 rpmInput.addEventListener('input', startRotation);
-unitSelect.addEventListener('change', startRotation);
+unitSelect.addEventListener('change', handleUnitChange);
 imageUpload.addEventListener('change', handleImageUpload);
 resetImageButton.addEventListener('click', resetToDefaultShape);
 
-// Remove the min="0" attribute from the HTML input element
-rpmInput.removeAttribute('min');
-
-// Initialize
 startRotation();
