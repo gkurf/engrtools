@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPM Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="input-section">
+        <h1>RPM Visualizer</h1>
+        <div class="input-row">
+            <div>
+                <label for="rpmInput">Speed:</label>
+                <input type="number" id="rpmInput" value="40" placeholder="e.g., 40">
+            </div>
+            <div>
+                <label for="unitSelect">Units:</label>
+                <select id="unitSelect">
+                    <option value="rpm" selected>RPM</option>
+                    <option value="rps">RPS</option>
+                    <option value="rad/s">rad/s</option>
+                    <option value="deg/s">deg/s</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-row">
+            <div class="image-controls">
+                <label for="imageUpload">Custom Image (optional):</label>
+                <div class="image-buttons">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <button id="resetImage" class="control-button">Reset Image</button>
+                </div>
+            </div>
+        </div>
+        <div id="errorPanel" class="error-panel"></div>
+    </div>
+
+    <div id="visualizationContainer" class="visualization-container">
+        <div id="rotatingElement" class="rotating-element">
+            <div class="default-shape"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
